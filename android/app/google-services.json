@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "233677639647",
+    "project_id": "timetable-flutter-demo",
+    "storage_bucket": "timetable-flutter-demo.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:233677639647:android:67ce09077b588a5cbebe6a",
+        "android_client_info": {
+          "package_name": "com.example.timetable_2_flutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "233677639647-2skh9biihotpqu5gehdktoqenjmcebvg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.timetable_2_flutter",
+            "certificate_hash": "56fb30b4bbc5e02730d9fc2b1660f16874cd06a8"
+          }
+        },
+        {
+          "client_id": "233677639647-0lf241aldop4resrue7doe7kqu3artma.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpIGxlxWyjApeAKM2PKqynjzFcr4HfgHA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "233677639647-0lf241aldop4resrue7doe7kqu3artma.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
