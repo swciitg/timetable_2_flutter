@@ -1,25 +1,28 @@
-import 'package:flutter/foundation.dart';
-import 'slot.dart';
+import 'package:flutter/material.dart';
 
 enum Status {
   pending,
   approved,
 }
 
-class ClassModel {
+class Quiz {
   final String type;
   final String code;
   final Duration duration;
   final String tag;
   final String platform;
-  final Slot slots;
+  final TimeOfDay time;
+  final DateTime initialDate;
+  final DateTime finalDate;
   Status status;
 
-  ClassModel({
-    this.type,
+  Quiz({
+    this.duration,
+    this.finalDate,
+    @required this.type,
     @required this.code,
-    @required this.duration,
-    @required this.slots,
+    @required this.initialDate,
+    @required this.time,
     @required this.tag,
     @required this.platform,
     this.status,
