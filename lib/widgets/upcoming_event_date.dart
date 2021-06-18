@@ -1,29 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:timetable_2_demo/globals/mySpaces.dart';
 
+import '../globals/mySpaces.dart';
 import './timetable_item.dart';
 import '../globals/myColors.dart';
 import '../globals/myFonts.dart';
-import '../models/quiz.dart';
 
 class UpcomingEventDate extends StatelessWidget {
-  final List<Quiz> quizzes;
-  UpcomingEventDate(this.quizzes);
-
+  final List<Map<String, dynamic>> data;
+  final String type;
+  UpcomingEventDate({this.data, this.type});
   @override
   Widget build(BuildContext context) {
+    String mapKey = (type == "Quiz") ? 'time' : 'deadline';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         MySpaces.vGapInBetween,
         Text(
-          DateFormat("dd MMMM").format(quizzes[0].initialDate),
+          DateFormat("dd MMMM")
+              .format(DateTime.parse(data[0][mapKey].toDate().toString())),
           style: MyFonts.medium.setColor(kGrey),
         ),
         MySpaces.vGapInBetween,
-        ...quizzes.map((quiz) {
-          return TimetableItem(quiz: quiz);
+        ...data.map((quiz) {
+          return TimetableItem(data: quiz, type: type);
         }).toList(),
       ],
     );

@@ -2,14 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-import './stores/assignment.dart';
-import './stores/viva.dart';
-import './stores/quizzes.dart';
-import './stores/labs.dart';
-import './stores/classes.dart';
 import './pages/home_page.dart';
+// import './pages/_.dart';
 import './pages/splash_page.dart';
 import './stores/login_store.dart';
+import './stores/database.dart';
 import './pages/login-page.dart';
 
 void main() {
@@ -39,27 +36,12 @@ class MyApp extends StatelessWidget {
                 create: (_) => LoginStore(),
               ),
               ChangeNotifierProvider.value(
-                value: Classes(),
-              ),
-              ChangeNotifierProvider.value(
-                value: Labs(),
-              ),
-              ChangeNotifierProvider.value(
-                value: Quizzes(),
-              ),
-              ChangeNotifierProvider.value(
-                value: Viva(),
-              ),
-              ChangeNotifierProvider.value(
-                value: Assignment(),
+                value: Database(),
               ),
             ],
             child: MaterialApp(
               title: 'Timetable',
               debugShowCheckedModeBanner: false,
-              theme: ThemeData(
-                canvasColor: Colors.transparent,
-              ),
               home: SplashPage(),
               routes: {
                 HomePage.routeName: (ctx) => HomePage(),
