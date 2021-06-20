@@ -81,7 +81,9 @@ class ModalSheetOptions extends StatelessWidget {
                 showModalBottomSheet(
                   isScrollControlled: true,
                   context: context,
-                  builder: (ctx) => AddSlot(type: tile["title"]),
+                  builder: (ctx) => Container(
+                      color: Color(0xFF737373),
+                      child: AddSlot(type: tile["title"])),
                 );
               },
             );

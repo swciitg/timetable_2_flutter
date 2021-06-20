@@ -1,3 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+
 String getDays(List<String> selectedDays) {
   String returnText = '';
   if (selectedDays.isEmpty) {
@@ -53,4 +57,87 @@ String duration(dur) {
   }
   String finalHours = (hours + (minutes / 60)).toString();
   return "$finalHours hour";
+}
+
+List<QueryDocumentSnapshot> filter(List<QueryDocumentSnapshot> documents) {
+  bool isToday = false;
+  var finalList = documents.where((doc) {
+    isToday = false;
+    doc.data()['slots'].forEach((elem) {
+      if (elem['day'] == DateFormat.EEEE().format(DateTime.now())) {
+        isToday = true;
+      }
+    });
+    return isToday;
+  }).toList();
+
+  return finalList;
+}
+
+Map<String, String> getUserData(String rN) {
+  Map<String, String> finalMap = {};
+  String department;
+  String program;
+  int rollNum = int.tryParse(rN);
+  int departmentCode = (rollNum ~/ 1000) % 100;
+  int programCode = (rollNum ~/ 100000) % 100;
+
+  switch (departmentCode) {
+    case 1:
+      department = "CSE";
+      break;
+    case 2:
+      department = "ECE";
+      break;
+    case 3:
+      department = "ME";
+      break;
+    case 4:
+      department = "CE";
+      break;
+    case 5:
+      department = "DD";
+      break;
+    case 6:
+      department = "BT";
+      break;
+    case 7:
+      department = "CL";
+      break;
+    case 8:
+      department = "EEE";
+      break;
+    case 21:
+      department = "EPH";
+      break;
+    case 22:
+      department = "CST";
+      break;
+    case 23:
+      department = "MnC";
+      break;
+  }
+
+  switch (programCode) {
+    case 1:
+      program = "B.Tech";
+      break;
+    case 2:
+      program = "B.Des";
+      break;
+    case 41:
+      program = "M.Tech";
+      break;
+    case 61:
+      program = "PhD";
+      break;
+    default:
+  }
+
+  finalMap = {
+    'departmentName': department,
+    'programName': program,
+  };
+
+  return finalMap;
 }

@@ -1,27 +1,42 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:heroicons/heroicons.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_picker/flutter_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:timetable_2_demo/stores/assignment.dart';
-import 'package:timetable_2_demo/stores/labs.dart';
-import 'package:timetable_2_demo/stores/quizzes.dart';
-import 'package:timetable_2_demo/stores/viva.dart';
 
 import '../functions/func.dart' as func;
 import './marquee.dart';
 import './slot_page_header.dart';
 import './slot_field_item.dart';
-import '../stores/classes.dart';
-import '../models/class_model.dart';
-import '../models/quiz.dart';
-import '../models/slot.dart';
 import '../globals/myColors.dart';
 import '../globals/mySpaces.dart';
 import '../globals/SizeConfig.dart';
 import '../globals/myFonts.dart';
+
+extension MyDateUtils on DateTime {
+  DateTime copyWith(
+      {int year,
+      int month,
+      int day,
+      int hour,
+      int minute,
+      int second,
+      int millisecond,
+      int microsecond}) {
+    return DateTime(
+      year ?? this.year,
+      month ?? this.month,
+      day ?? this.day,
+      hour ?? this.hour,
+      minute ?? this.minute,
+      second ?? this.second,
+      millisecond ?? this.millisecond,
+      microsecond ?? this.microsecond,
+    );
+  }
+}
 
 class AddSlot extends StatefulWidget {
   final String type;
@@ -68,6 +83,19 @@ class _AddSlotState extends State<AddSlot> {
     }
   }
 
+  List<Map<String, String>> get _slots {
+    List<Map<String, String>> finalList = [];
+    _selectedDays.forEach((elem) {
+      finalList.add({
+        'day': elem,
+        'time': (func.minutes(_time) == '0')
+            ? "${func.hours(_time)}:${func.minutes(_time)} ${func.timeMode(_time)}"
+            : "${func.hours(_time)} ${func.timeMode(_time)}",
+      });
+    });
+    return finalList;
+  }
+
   @override
   void dispose() {
     _codeFocusNode.removeListener(setName);
@@ -76,57 +104,71 @@ class _AddSlotState extends State<AddSlot> {
     super.dispose();
   }
 
-  void saveForm() {
+  Future<void> saveForm() async {
     if (!_form.currentState.validate()) {
-      return;
+      return null;
     }
+    final DocumentReference _db = FirebaseFirestore.instance
+        .collection('Timetable')
+        .doc('B.Tech')
+        .collection('First Year')
+        .doc('Semester 2')
+        .collection('BT')
+        .doc('Group 1');
     String code = _courseCodeName + " " + _courseCode;
-    if (widget.type == "Class") {
-      Provider.of<Classes>(context, listen: false).addClass(ClassModel(
-          code: code,
-          type: widget.type,
-          tag: _tag,
-          platform: _platform,
-          duration: _duration,
-          slots: Slot(day: _selectedDays, time: _time)));
-    } else if (widget.type == "Lab") {
-      Provider.of<Labs>(context, listen: false).addLabs(ClassModel(
-          code: code,
-          type: widget.type,
-          tag: _tag,
-          platform: _platform,
-          duration: _duration,
-          slots: Slot(day: _selectedDays, time: _time)));
+    if (widget.type == "Class" || widget.type == "Lab") {
+      try {
+        await _db.collection(widget.type).doc(code).set({
+          'code': code,
+          'platform': _platform,
+          'tag': _tag,
+          'status': 'approved',
+          'duration': func.duration(_duration),
+          'slots': _slots,
+        });
+      } catch (error) {
+        print(error);
+      }
     } else if (widget.type == "Quiz") {
-      Provider.of<Quizzes>(context, listen: false).addQuiz(Quiz(
-        code: code,
-        type: widget.type,
-        tag: _tag,
-        platform: _platform,
-        duration: _duration,
-        initialDate: _initialDate,
-        time: _time,
-      ));
+      try {
+        await _db.collection(widget.type).add({
+          'code': code,
+          'platform': _platform,
+          'tag': _tag,
+          'status': 'pending',
+          'duration': func.duration(_duration),
+          'time': _initialDate.copyWith(hour: _time.hour, minute: _time.minute),
+        });
+      } catch (error) {
+        print(error);
+      }
     } else if (widget.type == "Assignment") {
-      Provider.of<Assignment>(context, listen: false).addAssignment(Quiz(
-        code: code,
-        type: widget.type,
-        tag: _tag,
-        platform: _platform,
-        initialDate: _initialDate,
-        time: _time,
-      ));
+      try {
+        await _db.collection(widget.type).add({
+          'code': code,
+          'platform': _platform,
+          'tag': _tag,
+          'status': 'pending',
+          'deadline':
+              _initialDate.copyWith(hour: _time.hour, minute: _time.minute),
+        });
+      } catch (error) {
+        print(error);
+      }
     } else if (widget.type == "Viva") {
-      Provider.of<Viva>(context, listen: false).addViva(Quiz(
-        code: code,
-        type: widget.type,
-        tag: _tag,
-        platform: _platform,
-        duration: _duration,
-        initialDate: _initialDate,
-        finalDate: _finalDate,
-        time: _time,
-      ));
+      try {
+        await _db.collection(widget.type).add({
+          'code': code,
+          'platform': _platform,
+          'tag': _tag,
+          'status': 'pending',
+          'duration': func.duration(_duration),
+          'time': _initialDate.copyWith(hour: _time.hour, minute: _time.minute),
+          'finalDate': _finalDate,
+        });
+      } catch (error) {
+        print(error);
+      }
     }
     Navigator.of(context).pop();
   }

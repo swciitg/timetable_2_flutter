@@ -2,28 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import './marquee.dart';
-import '../models/class_model.dart';
-import '../models/quiz.dart';
 import '../globals/myColors.dart';
 import '../globals/myFonts.dart';
 import '../globals/SizeConfig.dart';
 import '../globals/MySpaces.dart';
 
 class TimetableItem extends StatelessWidget {
-  final ClassModel cl;
-  final Quiz quiz;
+  final Map<String, dynamic> data;
+  final String type;
   final bool events;
-  TimetableItem({this.cl, this.quiz, this.events = false});
-
-  bool get isClass {
-    return (cl != null);
-  }
+  TimetableItem({this.data, this.type, this.events = false});
 
   Color get sideColor {
-    if (isClass) {
+    if (type == "Class" || type == "Lab") {
       return kBlue;
     } else {
-      switch (quiz.type) {
+      switch (type) {
         case "Assignment":
           return kBlack;
           break;
@@ -34,40 +28,28 @@ class TimetableItem extends StatelessWidget {
     }
   }
 
-  String get duration {
-    if (!isClass && quiz.type == "Assignment") {
-      return "due date";
-    }
-    double minutes = isClass
-        ? cl.duration.inMinutes.toDouble()
-        : quiz.duration.inMinutes.toDouble();
-    double hours = isClass
-        ? cl.duration.inHours.toDouble()
-        : quiz.duration.inHours.toDouble();
-    minutes = minutes - (hours * 60);
-
-    if (hours == 0) {
-      return "${minutes.toInt()} min";
-    }
-    if (minutes == 0) {
-      return "${hours.toInt()} hour";
-    }
-    String finalHours = (hours + (minutes / 60)).toString();
-    return "$finalHours hour";
-  }
-
   String get time {
-    TimeOfDay slotTime = isClass ? cl.slots.time : quiz.time;
-    String timeMode = slotTime.periodOffset == 0 ? "am" : "pm";
-    int hours = (slotTime.hour - slotTime.periodOffset) == 0
-        ? 12
-        : slotTime.hour - slotTime.periodOffset;
-    String minutes =
-        (slotTime.minute < 10) ? "0${slotTime.minute}" : "${slotTime.minute}";
-    if (minutes == '00') {
-      return "$hours $timeMode";
+    String time;
+    if (type == "Class" || type == "Lab") {
+      final List<dynamic> slots = data['slots'];
+      slots.forEach((elem) {
+        if (elem['day'] == DateFormat.EEEE().format(DateTime.now())) {
+          time = elem['time'];
+        }
+      });
     }
-    return "$hours : $minutes $timeMode";
+
+    if (type == "Quiz" || type == "Assignment" || type == "Viva") {
+      String mapKey = (type == "Assignment") ? 'deadline' : 'time';
+      String minutes = DateFormat().add_m().format(data[mapKey].toDate());
+
+      if (minutes == '0') {
+        time = DateFormat("h a").format(data[mapKey].toDate()).toLowerCase();
+      } else {
+        time = DateFormat("h:mm a").format(data[mapKey].toDate()).toLowerCase();
+      }
+    }
+    return time;
   }
 
   @override
@@ -76,12 +58,12 @@ class TimetableItem extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (events && !isClass && quiz.type == "Viva")
+        if (events && type == "Viva")
           Column(
             children: [
               MySpaces.vGapInBetween,
               Text(
-                "${DateFormat("dd").format(quiz.initialDate)}-${DateFormat("dd MMMM").format(quiz.finalDate)}",
+                "${DateFormat("dd").format(DateTime.parse(data['time'].toDate().toString()))}-${DateFormat("dd MMMM").format(DateTime.parse(data['finalDate'].toDate().toString()))}",
                 style: MyFonts.medium.setColor(kGrey),
               ),
               MySpaces.vGapInBetween,
@@ -120,7 +102,7 @@ class TimetableItem extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "${isClass ? cl.code : quiz.code}",
+                          "${data['code']}",
                           style: MyFonts.bold.tsFactor(20),
                         ),
                         Container(
@@ -129,7 +111,7 @@ class TimetableItem extends StatelessWidget {
                             child: RichText(
                               overflow: TextOverflow.fade,
                               text: TextSpan(
-                                text: "${isClass ? cl.tag : quiz.tag}",
+                                text: "${data['tag']}",
                                 style:
                                     MyFonts.medium.setColor(kGrey).tsFactor(13),
                                 children: [
@@ -140,8 +122,7 @@ class TimetableItem extends StatelessWidget {
                                         .tsFactor(25),
                                   ),
                                   TextSpan(
-                                    text:
-                                        "${isClass ? cl.platform : quiz.platform}",
+                                    text: "${data['platform']}",
                                   ),
                                 ],
                               ),
@@ -164,7 +145,7 @@ class TimetableItem extends StatelessWidget {
                         ),
                         MySpaces.vGapInBetween,
                         Text(
-                          "$duration",
+                          "${data['duration'] ?? "due date"}",
                           style: MyFonts.medium.tsFactor(16).setColor(kGrey),
                         ),
                       ],

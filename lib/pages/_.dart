@@ -37,7 +37,7 @@ class _HomePageState extends State<HomePage> {
                     height: 20,
                   ),
                   Text(
-                    name,
+                    name ?? "MIlind",
                     style: GoogleFonts.rubik(
                       height: 1.5,
                       textStyle: TextStyle(
@@ -47,7 +47,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   Text(
-                    degree,
+                    degree ?? "MIlind",
                     style: GoogleFonts.rubik(
                       height: 1.5,
                       textStyle: TextStyle(
@@ -57,7 +57,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   Text(
-                    rollNumber,
+                    rollNumber ?? "MIlind",
                     style: GoogleFonts.rubik(
                       height: 1.5,
                       textStyle: TextStyle(
@@ -67,7 +67,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   Text(
-                    currentUser.email,
+                    currentUser.email ?? "MIlind",
                     style: GoogleFonts.rubik(
                       height: 1.5,
                       textStyle: TextStyle(
@@ -77,7 +77,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   Text(
-                    currentUser.uid,
+                    currentUser.uid ?? "MIlind",
                     style: GoogleFonts.rubik(
                       height: 2,
                       textStyle: TextStyle(

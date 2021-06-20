@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../widgets/upcoming_events.dart';
 import '../globals/sizeConfig.dart';
@@ -17,7 +16,7 @@ class HomePage extends StatelessWidget {
       context: context,
       builder: (ctx) {
         return Container(
-          color: Colors.transparent,
+          color: Color(0xFF737373),
           child: ModalSheetOptions(),
         );
       },
@@ -41,16 +40,14 @@ class HomePage extends StatelessWidget {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.all(SizeConfig.screenWidth * 0.05),
-          child: Column(
-            children: [
-              Today(),
-              MySpaces.vMediumGapInBetween,
-              UpcomingEvents(),
-            ],
-          ),
+      body: Padding(
+        padding: EdgeInsets.all(SizeConfig.screenWidth * 0.05),
+        child: ListView(
+          children: [
+            Today(),
+            MySpaces.vMediumGapInBetween,
+            UpcomingEvents(),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
