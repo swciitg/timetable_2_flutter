@@ -43,6 +43,8 @@ dependencies:
   heroicons: ^0.2.1
   flutter_picker: ^2.0.1
   stream_transform: ^2.0.0
+  connectivity: ^3.0.6
+  lottie: ^1.0.1
 
 dev_dependencies:
   flutter_test:
@@ -72,7 +74,7 @@ flutter:
     - assets/images/bg_triangle.png
     - assets/images/login_illustration.png
     - assets/images/no_internet_illustration.png
-
+    - assets/images/no-internet.json
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 

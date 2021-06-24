@@ -72,7 +72,7 @@ class UpcomingEvents extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  MySpaces.vMediumGapInBetween,
+                  // MySpaces.vMediumGapInBetween,
                   Text(
                     "Upcoming Assignments",
                     style: MyFonts.bold.tsFactor(25),

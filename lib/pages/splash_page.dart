@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:timetable_2_demo/pages/no-internet.dart';
 
 import './home_page.dart';
 import './login-page.dart';
@@ -14,9 +15,9 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
-  @override
-  void initState() {
-    Provider.of<LoginStore>(context, listen: false)
+  bool noInternet = false;
+  Future<void> checkUserStatus() {
+    return Provider.of<LoginStore>(context, listen: false)
         .isAlreadyAuthenticated()
         .then(
       (result) {
@@ -28,32 +29,79 @@ class _SplashPageState extends State<SplashPage> {
               LoginPage.routeName, (Route<dynamic> route) => false);
         }
       },
-    );
+    ).catchError((error) {
+      setState(() {
+        noInternet = true;
+      });
+    });
+  }
+
+  @override
+  void initState() {
+    checkUserStatus();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
+    final double height =
+        SizeConfig.screenHeight - SizeConfig.mediaQueryData.padding.top;
     return Scaffold(
-      body: Container(
-        color: kBlue,
-        child: Center(
-          child: RichText(
-            text: TextSpan(
-              text: "Timetable",
-              style: MyFonts.extraBold.factor(15),
-              children: <TextSpan>[
-                TextSpan(
-                  text: ".",
-                  style: TextStyle(
-                    color: kYellow,
+      body: RefreshIndicator(
+        onRefresh: checkUserStatus,
+        child: ListView(
+          children: [
+            if (noInternet) NoInternet(height: height),
+            if (!noInternet)
+              Container(
+                height: height,
+                color: kBlue,
+                child: Center(
+                  child: RichText(
+                    text: TextSpan(
+                      text: "Timetable",
+                      style: MyFonts.extraBold.factor(15),
+                      children: <TextSpan>[
+                        TextSpan(
+                          text: ".",
+                          style: TextStyle(
+                            color: kYellow,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ),
+              ),
+          ],
         ),
+        // child: noInternet
+        //     ? Stack(
+        //         children: [
+        //           ListView(),
+        //           NoInternet(),
+        //         ],
+        //       )
+        //     : Container(
+        //         color: kBlue,
+        //         child: Center(
+        //           child: RichText(
+        //             text: TextSpan(
+        //               text: "Timetable",
+        //               style: MyFonts.extraBold.factor(15),
+        //               children: <TextSpan>[
+        //                 TextSpan(
+        //                   text: ".",
+        //                   style: TextStyle(
+        //                     color: kYellow,
+        //                   ),
+        //                 ),
+        //               ],
+        //             ),
+        //           ),
+        //         ),
+        //       ),
       ),
     );
   }

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:timetable_2_demo/stores/check_connectivity.dart';
 
 import './pages/home_page.dart';
-// import './pages/_.dart';
 import './pages/splash_page.dart';
 import './stores/login_store.dart';
 import './stores/database.dart';
@@ -37,6 +37,9 @@ class MyApp extends StatelessWidget {
               ),
               ChangeNotifierProvider.value(
                 value: Database(),
+              ),
+              ChangeNotifierProvider.value(
+                value: ConnectivityChangeNotifier(),
               ),
             ],
             child: MaterialApp(
