@@ -26,6 +26,7 @@ class HomePage extends StatelessWidget {
   static const routeName = 'home-page';
   @override
   Widget build(BuildContext context) {
+    SizeConfig().init(context);
     return Scaffold(
       drawer: MainDrawer(),
       backgroundColor: Colors.white,

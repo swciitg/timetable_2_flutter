@@ -46,6 +46,7 @@ class AddSlot extends StatefulWidget {
 }
 
 class _AddSlotState extends State<AddSlot> {
+  bool isLoading = false;
   final _tagsController = TextEditingController();
   final _codeFocusNode = FocusNode();
   final _form = GlobalKey<FormState>();
@@ -88,9 +89,9 @@ class _AddSlotState extends State<AddSlot> {
     _selectedDays.forEach((elem) {
       finalList.add({
         'day': elem,
-        'time': (func.minutes(_time) == '0')
-            ? "${func.hours(_time)}:${func.minutes(_time)} ${func.timeMode(_time)}"
-            : "${func.hours(_time)} ${func.timeMode(_time)}",
+        'time': (func.minutes(_time) == '00')
+            ? "${func.hours(_time)} ${func.timeMode(_time)}"
+            : "${func.hours(_time)}:${func.minutes(_time)} ${func.timeMode(_time)}",
       });
     });
     return finalList;
@@ -116,13 +117,19 @@ class _AddSlotState extends State<AddSlot> {
         .collection('BT')
         .doc('Group 1');
     String code = _courseCodeName + " " + _courseCode;
+    String dbcode = _courseCodeName + "" + _courseCode;
+
+    setState(() {
+      isLoading = true;
+    });
+
     if (widget.type == "Class" || widget.type == "Lab") {
       try {
-        await _db.collection(widget.type).doc(code).set({
+        await _db.collection(widget.type).doc(dbcode).set({
           'code': code,
           'platform': _platform,
           'tag': _tag,
-          'status': 'approved',
+          'status': 'pending',
           'duration': func.duration(_duration),
           'slots': _slots,
         });
@@ -170,6 +177,11 @@ class _AddSlotState extends State<AddSlot> {
         print(error);
       }
     }
+    setState(() {
+      isLoading = false;
+    });
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text("${widget.type} added")));
     Navigator.of(context).pop();
   }
 
@@ -302,413 +314,419 @@ class _AddSlotState extends State<AddSlot> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Form(
-        key: _form,
-        child: DefaultTextStyle(
-          style: MyFonts.light.setColor(kGrey),
-          child: Wrap(
-            children: [
-              SlotPageHeader(
-                heading: widget.type,
-              ),
-              // Main Widgets Started
-              Container(
-                color: kWhite,
-                padding: EdgeInsets.all(30),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+    return isLoading
+        ? Center(child: CircularProgressIndicator())
+        : SingleChildScrollView(
+            child: Form(
+              key: _form,
+              child: DefaultTextStyle(
+                style: MyFonts.light.setColor(kGrey),
+                child: Wrap(
                   children: [
-                    // .........................Row 1.........................
-                    Row(
-                      children: [
-                        SlotFieldItem(
-                          icon: HeroIcons.academicCap,
-                          title: "Course Code",
-                        ),
-                        SizedBox(
-                          width: SizeConfig.screenWidth * 0.13,
-                          height: 40,
-                          child: TextFormField(
-                            textInputAction: TextInputAction.next,
-                            onEditingComplete: () {
-                              FocusScope.of(context)
-                                  .requestFocus(_codeFocusNode);
-                            },
-                            onChanged: (value) {
-                              _courseCodeName = value;
-                            },
-                            validator: (value) {
-                              if (value.isEmpty) {
-                                return "Course name can't be black";
-                              }
-                              return null;
-                            },
-                            style: MyFonts.bold.setColor(kWhite).size(20),
-                            textAlign: TextAlign.center,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(5),
-                                  bottomLeft: Radius.circular(5),
-                                ),
-                              ),
-                              contentPadding:
-                                  EdgeInsets.symmetric(horizontal: 0),
-                              filled: true,
-                              fillColor: kGrey,
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: SizeConfig.screenWidth * 0.23,
-                          height: 40,
-                          child: TextFormField(
-                            onFieldSubmitted: (value) {
-                              _courseCode = value;
-                            },
-                            onChanged: (value) {
-                              _courseCode = value;
-                            },
-                            focusNode: _codeFocusNode,
-                            validator: (value) {
-                              if (value.isEmpty) {
-                                return "Course code can't be black";
-                              }
-                              return null;
-                            },
-                            keyboardType: TextInputType.number,
-                            style: MyFonts.bold.setColor(kGrey).size(20),
-                            textAlign: TextAlign.center,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.only(
-                                  topRight: Radius.circular(5),
-                                  bottomRight: Radius.circular(5),
-                                ),
-                              ),
-                              contentPadding:
-                                  EdgeInsets.symmetric(horizontal: 0),
-                            ),
-                          ),
-                        ),
-                      ],
+                    SlotPageHeader(
+                      heading: widget.type,
                     ),
-                    // .........................Row 2.........................
+                    // Main Widgets Started
                     Container(
-                      margin: EdgeInsets.symmetric(
-                          vertical: SizeConfig.horizontalBlockSize * 8),
-                      child: Row(
+                      color: kWhite,
+                      padding: EdgeInsets.all(30),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          SlotFieldItem(
-                            icon: HeroIcons.clock,
-                            title: "Time Slot",
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              showTimePicker(
-                                      context: context,
-                                      initialTime: TimeOfDay.now())
-                                  .then((selectedTime) {
-                                setState(() {
-                                  if (selectedTime != null) {
-                                    _time = selectedTime;
-                                  }
-                                });
-                              });
-                            },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                  border: Border.all(
-                                    width: 1,
-                                    color: kGrey,
+                          // .........................Row 1.........................
+                          Row(
+                            children: [
+                              SlotFieldItem(
+                                icon: HeroIcons.academicCap,
+                                title: "Course Code",
+                              ),
+                              SizedBox(
+                                width: SizeConfig.screenWidth * 0.13,
+                                height: 40,
+                                child: TextFormField(
+                                  textInputAction: TextInputAction.next,
+                                  onEditingComplete: () {
+                                    FocusScope.of(context)
+                                        .requestFocus(_codeFocusNode);
+                                  },
+                                  onChanged: (value) {
+                                    _courseCodeName = value;
+                                  },
+                                  validator: (value) {
+                                    if (value.isEmpty) {
+                                      return "Course name can't be black";
+                                    }
+                                    return null;
+                                  },
+                                  style: MyFonts.bold.setColor(kWhite).size(20),
+                                  textAlign: TextAlign.center,
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(5),
+                                        bottomLeft: Radius.circular(5),
+                                      ),
+                                    ),
+                                    contentPadding:
+                                        EdgeInsets.symmetric(horizontal: 0),
+                                    filled: true,
+                                    fillColor: kGrey,
                                   ),
-                                  borderRadius: BorderRadius.circular(6)),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(5),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: SizeConfig.screenWidth * 0.23,
-                                      height: 40,
-                                      alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(5)),
-                                      child: Text(
-                                        "${func.hours(_time)} : ${func.minutes(_time)}",
-                                        style: MyFonts.bold
-                                            .setColor(kGrey)
-                                            .size(22),
-                                      ),
-                                    ),
-                                    Container(
-                                      width: SizeConfig.screenWidth * 0.13,
-                                      height: 40,
-                                      alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                        color: kGrey,
-                                      ),
-                                      child: Text(
-                                        "${func.timeMode(_time)}",
-                                        style: MyFonts.bold
-                                            .setColor(kWhite)
-                                            .size(20),
-                                      ),
-                                    ),
-                                  ],
                                 ),
                               ),
-                            ),
+                              SizedBox(
+                                width: SizeConfig.screenWidth * 0.23,
+                                height: 40,
+                                child: TextFormField(
+                                  onFieldSubmitted: (value) {
+                                    _courseCode = value;
+                                  },
+                                  onChanged: (value) {
+                                    _courseCode = value;
+                                  },
+                                  focusNode: _codeFocusNode,
+                                  validator: (value) {
+                                    if (value.isEmpty) {
+                                      return "Course code can't be black";
+                                    }
+                                    return null;
+                                  },
+                                  keyboardType: TextInputType.number,
+                                  style: MyFonts.bold.setColor(kGrey).size(20),
+                                  textAlign: TextAlign.center,
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.only(
+                                        topRight: Radius.circular(5),
+                                        bottomRight: Radius.circular(5),
+                                      ),
+                                    ),
+                                    contentPadding:
+                                        EdgeInsets.symmetric(horizontal: 0),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                    // .........................Row 3.........................
-                    if (widget.type != "Assignment")
-                      Container(
-                        margin: EdgeInsets.only(
-                            bottom: SizeConfig.horizontalBlockSize * 6),
-                        child: Row(
-                          children: [
-                            SlotFieldItem(
-                              icon: HeroIcons.chartPie,
-                              title: "Duration",
-                            ),
-                            (_duration == null)
-                                ? TextButton(
-                                    onPressed: () {
-                                      showDurationPicker(context);
-                                    },
-                                    child: Text(
-                                      "select",
-                                      style: MyFonts.light.setColor(k),
-                                    ),
-                                  )
-                                : Text(
-                                    "${func.duration(_duration)}",
-                                    style: MyFonts.medium
-                                        .tsFactor(16)
-                                        .setColor(kGrey),
-                                  ),
-                          ],
-                        ),
-                      ),
-                    // .........................Row 4.........................
-                    if (widget.type == "Viva")
-                      Container(
-                        margin: EdgeInsets.only(
-                            bottom: SizeConfig.horizontalBlockSize * 8),
-                        child: Row(
-                          children: [
-                            SlotFieldItem(
-                              icon: HeroIcons.pencilAlt,
-                              title: "Date range",
-                            ),
-                            (_initialDate == null && _finalDate == null)
-                                ? TextButton(
-                                    onPressed: () {
-                                      showPickerDateRange(context);
-                                    },
-                                    child: Text(
-                                      "select",
-                                      style: MyFonts.light.setColor(k),
-                                    ),
-                                  )
-                                : Text(
-                                    "${DateFormat("dd").format(_initialDate)}-${DateFormat("dd MMMM").format(_finalDate)}",
-                                    style: MyFonts.medium.setColor(kGrey),
-                                  ),
-                          ],
-                        ),
-                      ),
-                    if (widget.type == "Quiz" || widget.type == "Assignment")
-                      Container(
-                        margin: EdgeInsets.only(
-                            bottom: SizeConfig.horizontalBlockSize * 8),
-                        child: Row(
-                          children: [
-                            SlotFieldItem(
-                              icon: HeroIcons.pencilAlt,
-                              title: "Date",
-                            ),
-                            (_initialDate == null && _finalDate == null)
-                                ? TextButton(
-                                    onPressed: () {
-                                      return showDatePicker(
-                                              context: context,
-                                              initialDate: DateTime.now(),
-                                              firstDate: DateTime.now()
-                                                  .subtract(Duration(days: 15)),
-                                              lastDate: DateTime.now()
-                                                  .add(Duration(days: 30 * 7)))
-                                          .then((value) {
-                                        setState(() {
-                                          _initialDate = value;
-                                        });
+                          // .........................Row 2.........................
+                          Container(
+                            margin: EdgeInsets.symmetric(
+                                vertical: SizeConfig.horizontalBlockSize * 8),
+                            child: Row(
+                              children: [
+                                SlotFieldItem(
+                                  icon: HeroIcons.clock,
+                                  title: "Time Slot",
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    showTimePicker(
+                                            context: context,
+                                            initialTime: TimeOfDay.now())
+                                        .then((selectedTime) {
+                                      setState(() {
+                                        if (selectedTime != null) {
+                                          _time = selectedTime;
+                                        }
                                       });
-                                    },
-                                    child: Text(
-                                      "select",
-                                      style: MyFonts.light.setColor(k),
+                                    });
+                                  },
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                        border: Border.all(
+                                          width: 1,
+                                          color: kGrey,
+                                        ),
+                                        borderRadius: BorderRadius.circular(6)),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(5),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width:
+                                                SizeConfig.screenWidth * 0.23,
+                                            height: 40,
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(5)),
+                                            child: Text(
+                                              "${func.hours(_time)} : ${func.minutes(_time)}",
+                                              style: MyFonts.bold
+                                                  .setColor(kGrey)
+                                                  .size(22),
+                                            ),
+                                          ),
+                                          Container(
+                                            width:
+                                                SizeConfig.screenWidth * 0.13,
+                                            height: 40,
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                              color: kGrey,
+                                            ),
+                                            child: Text(
+                                              "${func.timeMode(_time)}",
+                                              style: MyFonts.bold
+                                                  .setColor(kWhite)
+                                                  .size(20),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  )
-                                : Text(
-                                    DateFormat("dd MMMM").format(_initialDate),
-                                    style: MyFonts.medium.setColor(kGrey),
                                   ),
-                          ],
-                        ),
-                      ),
-                    // .........................Row 5.........................
-                    if (widget.type == "Class" || widget.type == "Lab")
-                      Row(
-                        children: [
-                          SlotFieldItem(
-                            icon: HeroIcons.calendar,
-                            title: "Days",
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
-                    if (widget.type == "Class" || widget.type == "Lab")
-                      Container(
-                        margin: EdgeInsets.symmetric(vertical: 15),
-                        child: Row(
-                          children: showDay(),
-                        ),
-                      ),
-                    Container(
-                      margin: EdgeInsets.only(top: 10),
-                      child: Row(
-                        children: [
-                          SlotFieldItem(
-                            icon: HeroIcons.hashtag,
-                            title: "add tags",
+                          // .........................Row 3.........................
+                          if (widget.type != "Assignment")
+                            Container(
+                              margin: EdgeInsets.only(
+                                  bottom: SizeConfig.horizontalBlockSize * 6),
+                              child: Row(
+                                children: [
+                                  SlotFieldItem(
+                                    icon: HeroIcons.chartPie,
+                                    title: "Duration",
+                                  ),
+                                  (_duration == null)
+                                      ? TextButton(
+                                          onPressed: () {
+                                            showDurationPicker(context);
+                                          },
+                                          child: Text(
+                                            "select",
+                                            style: MyFonts.light.setColor(k),
+                                          ),
+                                        )
+                                      : Text(
+                                          "${func.duration(_duration)}",
+                                          style: MyFonts.medium
+                                              .tsFactor(16)
+                                              .setColor(kGrey),
+                                        ),
+                                ],
+                              ),
+                            ),
+                          // .........................Row 4.........................
+                          if (widget.type == "Viva")
+                            Container(
+                              margin: EdgeInsets.only(
+                                  bottom: SizeConfig.horizontalBlockSize * 8),
+                              child: Row(
+                                children: [
+                                  SlotFieldItem(
+                                    icon: HeroIcons.pencilAlt,
+                                    title: "Date range",
+                                  ),
+                                  (_initialDate == null && _finalDate == null)
+                                      ? TextButton(
+                                          onPressed: () {
+                                            showPickerDateRange(context);
+                                          },
+                                          child: Text(
+                                            "select",
+                                            style: MyFonts.light.setColor(k),
+                                          ),
+                                        )
+                                      : Text(
+                                          "${DateFormat("dd").format(_initialDate)}-${DateFormat("dd MMMM").format(_finalDate)}",
+                                          style: MyFonts.medium.setColor(kGrey),
+                                        ),
+                                ],
+                              ),
+                            ),
+                          if (widget.type == "Quiz" ||
+                              widget.type == "Assignment")
+                            Container(
+                              margin: EdgeInsets.only(
+                                  bottom: SizeConfig.horizontalBlockSize * 8),
+                              child: Row(
+                                children: [
+                                  SlotFieldItem(
+                                    icon: HeroIcons.pencilAlt,
+                                    title: "Date",
+                                  ),
+                                  (_initialDate == null && _finalDate == null)
+                                      ? TextButton(
+                                          onPressed: () {
+                                            return showDatePicker(
+                                                    context: context,
+                                                    initialDate: DateTime.now(),
+                                                    firstDate: DateTime.now(),
+                                                    lastDate: DateTime.now()
+                                                        .add(Duration(
+                                                            days: 30 * 7)))
+                                                .then((value) {
+                                              setState(() {
+                                                _initialDate = value;
+                                              });
+                                            });
+                                          },
+                                          child: Text(
+                                            "select",
+                                            style: MyFonts.light.setColor(k),
+                                          ),
+                                        )
+                                      : Text(
+                                          DateFormat("dd MMMM")
+                                              .format(_initialDate),
+                                          style: MyFonts.medium.setColor(kGrey),
+                                        ),
+                                ],
+                              ),
+                            ),
+                          // .........................Row 5.........................
+                          if (widget.type == "Class" || widget.type == "Lab")
+                            Row(
+                              children: [
+                                SlotFieldItem(
+                                  icon: HeroIcons.calendar,
+                                  title: "Days",
+                                ),
+                              ],
+                            ),
+                          if (widget.type == "Class" || widget.type == "Lab")
+                            Container(
+                              margin: EdgeInsets.symmetric(vertical: 15),
+                              child: Row(
+                                children: showDay(),
+                              ),
+                            ),
+                          Container(
+                            margin: EdgeInsets.only(top: 10),
+                            child: Row(
+                              children: [
+                                SlotFieldItem(
+                                  icon: HeroIcons.hashtag,
+                                  title: "add tags",
+                                ),
+                                Container(
+                                  child: MarqueeWidget(
+                                    child: RichText(
+                                      overflow: TextOverflow.fade,
+                                      text: TextSpan(
+                                        text: "${_tag ?? ''}",
+                                        style: MyFonts.medium
+                                            .setColor(kGrey)
+                                            .tsFactor(13),
+                                        children: [
+                                          TextSpan(
+                                            text: " . ",
+                                            style: MyFonts.extraBold
+                                                .setColor(kBlue)
+                                                .tsFactor(25),
+                                          ),
+                                          TextSpan(
+                                            text: "${_platform ?? ''}",
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              _tagsController.text = "";
+                              showDialog(
+                                  context: context,
+                                  builder: (ctx) {
+                                    return AlertDialog(
+                                      title: Text("Enter Tags"),
+                                      content: Form(
+                                        key: _formDialog,
+                                        child: Wrap(
+                                          children: [
+                                            TextFormField(
+                                              initialValue: _tag ?? '',
+                                              decoration: InputDecoration(
+                                                labelText: "Tag",
+                                              ),
+                                              onSaved: (tag) {
+                                                _tag = tag;
+                                              },
+                                              validator: (value) {
+                                                if (value.isEmpty) {
+                                                  return "Enter a value";
+                                                }
+                                                return null;
+                                              },
+                                            ),
+                                            MySpaces.vGapInBetween,
+                                            TextFormField(
+                                              initialValue: _platform ?? '',
+                                              decoration: InputDecoration(
+                                                labelText: "Platform",
+                                              ),
+                                              onSaved: (platform) {
+                                                _platform = platform;
+                                              },
+                                              validator: (value) {
+                                                if (value.isEmpty) {
+                                                  return "Enter the platform";
+                                                }
+                                                return null;
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            if (!_formDialog.currentState
+                                                .validate()) {
+                                              return;
+                                            }
+                                            _formDialog.currentState.save();
+                                            setState(() {});
+                                            Navigator.of(ctx).pop();
+                                          },
+                                          child: Text("OK"),
+                                        ),
+                                      ],
+                                    );
+                                  });
+                            },
+                            child: Text(
+                              "+add",
+                              style: MyFonts.light.setColor(k),
+                            ),
                           ),
                           Container(
-                            child: MarqueeWidget(
-                              child: RichText(
-                                overflow: TextOverflow.fade,
-                                text: TextSpan(
-                                  text: "${_tag ?? ''}",
-                                  style: MyFonts.medium
-                                      .setColor(kGrey)
-                                      .tsFactor(13),
-                                  children: [
-                                    TextSpan(
-                                      text: " . ",
-                                      style: MyFonts.extraBold
-                                          .setColor(kBlue)
-                                          .tsFactor(25),
-                                    ),
-                                    TextSpan(
-                                      text: "${_platform ?? ''}",
-                                    ),
-                                  ],
-                                ),
+                            margin: EdgeInsets.symmetric(vertical: 10),
+                            child: Text(
+                              "The ${widget.type.toLowerCase()} ${_courseCodeName ?? ''}${_courseCode ?? ''} will be added on slot ${func.hours(_time)}:${func.minutes(_time)} ${func.timeMode(_time)} ${(widget.type == "Class" || widget.type == "Lab") ? 'on ' + func.getDays(_selectedDays) : ' '}",
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          Container(
+                            margin: EdgeInsets.only(top: 5),
+                            width: double.infinity,
+                            child: TextButton(
+                              child: Text(
+                                "Create ${widget.type}",
+                                style: MyFonts.bold.size(18).setColor(kWhite),
                               ),
+                              style: TextButton.styleFrom(
+                                backgroundColor: Theme.of(context).primaryColor,
+                                padding: EdgeInsets.symmetric(vertical: 15),
+                              ),
+                              onPressed: saveForm,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        _tagsController.text = "";
-                        showDialog(
-                            context: context,
-                            builder: (ctx) {
-                              return AlertDialog(
-                                title: Text("Enter Tags"),
-                                content: Form(
-                                  key: _formDialog,
-                                  child: Wrap(
-                                    children: [
-                                      TextFormField(
-                                        initialValue: _tag ?? '',
-                                        decoration: InputDecoration(
-                                          labelText: "Tag",
-                                        ),
-                                        onSaved: (tag) {
-                                          _tag = tag;
-                                        },
-                                        validator: (value) {
-                                          if (value.isEmpty) {
-                                            return "Enter a value";
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      MySpaces.vGapInBetween,
-                                      TextFormField(
-                                        initialValue: _platform ?? '',
-                                        decoration: InputDecoration(
-                                          labelText: "Platform",
-                                        ),
-                                        onSaved: (platform) {
-                                          _platform = platform;
-                                        },
-                                        validator: (value) {
-                                          if (value.isEmpty) {
-                                            return "Enter the platform";
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () {
-                                      if (!_formDialog.currentState
-                                          .validate()) {
-                                        return;
-                                      }
-                                      _formDialog.currentState.save();
-                                      setState(() {});
-                                      Navigator.of(ctx).pop();
-                                    },
-                                    child: Text("OK"),
-                                  ),
-                                ],
-                              );
-                            });
-                      },
-                      child: Text(
-                        "+add",
-                        style: MyFonts.light.setColor(k),
-                      ),
-                    ),
-                    Container(
-                      margin: EdgeInsets.symmetric(vertical: 10),
-                      child: Text(
-                        "The ${widget.type.toLowerCase()} ${_courseCodeName ?? ''}${_courseCode ?? ''} will be added on slot ${func.hours(_time)}:${func.minutes(_time)} ${func.timeMode(_time)} ${(widget.type == "Class" || widget.type == "Lab") ? 'on ' + func.getDays(_selectedDays) : ' '}",
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    Container(
-                      margin: EdgeInsets.only(top: 5),
-                      width: double.infinity,
-                      child: TextButton(
-                        child: Text(
-                          "Create ${widget.type}",
-                          style: MyFonts.bold.size(18).setColor(kWhite),
-                        ),
-                        style: TextButton.styleFrom(
-                          backgroundColor: Theme.of(context).primaryColor,
-                          padding: EdgeInsets.symmetric(vertical: 15),
-                        ),
-                        onPressed: saveForm,
-                      ),
-                    ),
+                    )
                   ],
                 ),
-              )
-            ],
-          ),
-        ),
-      ),
-    );
+              ),
+            ),
+          );
   }
 }

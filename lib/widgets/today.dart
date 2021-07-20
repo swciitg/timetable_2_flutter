@@ -12,7 +12,18 @@ import '../globals/MyColors.dart';
 import './timetable_item.dart';
 
 class Today extends StatelessWidget {
-  Widget classAndLabs(DocumentReference db, String type) {
+  Timestamp time(Duration days) {
+    final time = Timestamp.fromDate(DateTime.utc(
+        DateTime.now().year,
+        DateTime.now().add(days).month,
+        DateTime.now().add(days).day,
+        -5,
+        -30,
+        0));
+    return time;
+  }
+
+  Widget classAndLabs(BuildContext context, DocumentReference db, String type) {
     return StreamBuilder(
       stream: db
           .collection(type)
@@ -20,11 +31,16 @@ class Today extends StatelessWidget {
           .snapshots(),
       builder: (ctx, AsyncSnapshot<QuerySnapshot> snapshot) {
         if (snapshot.hasError) {
-          return Text('Something went wrong');
+          return Column(
+            children: [
+              MySpaces.vSmallGapInBetween,
+              Center(child: Text("Something got wrong while fetching $type")),
+            ],
+          );
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Text("Loading");
+          return Center(child: Text("Loading..."));
         }
         return Column(
           children: filter(snapshot.data.docs).map((DocumentSnapshot document) {
@@ -64,22 +80,32 @@ class Today extends StatelessWidget {
             ),
             MySpaces.vGapInBetween,
             // Classes and Labs
-            ...["Class", "Labs"].map((elem) {
-              return classAndLabs(_db, elem);
+            ...["Class", "Lab"].map((elem) {
+              return classAndLabs(context, _db, elem);
             }),
 
             StreamBuilder(
               stream: _db
                   .collection('Quiz')
                   .where('status', isEqualTo: 'approved')
+                  .where('time',
+                      isGreaterThanOrEqualTo: time(Duration(days: 0)),
+                      isLessThanOrEqualTo: time(Duration(days: 10)))
+                  .orderBy('time')
                   .snapshots(),
               builder: (ctx, AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (snapshot.hasError) {
-                  return Text('Something went wrong');
+                  return Column(
+                    children: [
+                      MySpaces.vSmallGapInBetween,
+                      Center(
+                          child: Text(
+                              "Something got wrong while fetching Quizzes")),
+                    ],
+                  );
                 }
-
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Text("Loading");
+                  return Center(child: Text("Loading..."));
                 }
                 return Consumer<Database>(builder: (_, db, __) {
                   return Column(
@@ -96,14 +122,24 @@ class Today extends StatelessWidget {
               stream: _db
                   .collection('Viva')
                   .where('status', isEqualTo: 'approved')
+                  .where('time',
+                      isGreaterThanOrEqualTo: time(Duration(days: 0)),
+                      isLessThanOrEqualTo: time(Duration(days: 10)))
+                  .orderBy('time')
                   .snapshots(),
               builder: (ctx, AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (snapshot.hasError) {
-                  return Text('Something went wrong');
+                  return Column(
+                    children: [
+                      MySpaces.vSmallGapInBetween,
+                      Center(
+                          child:
+                              Text("Something got wrong while fetching Vivas")),
+                    ],
+                  );
                 }
-
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Text("Loading");
+                  return Center(child: Text("Loading..."));
                 }
                 return Consumer<Database>(builder: (_, db, __) {
                   return Column(
@@ -120,14 +156,25 @@ class Today extends StatelessWidget {
               stream: _db
                   .collection('Assignment')
                   .where('status', isEqualTo: 'approved')
+                  .where('deadline',
+                      isGreaterThanOrEqualTo: time(Duration(days: 0)),
+                      isLessThanOrEqualTo: time(Duration(days: 7)))
+                  .orderBy('deadline')
                   .snapshots(),
               builder: (ctx, AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (snapshot.hasError) {
-                  return Text('Something went wrong');
+                  return Column(
+                    children: [
+                      MySpaces.vSmallGapInBetween,
+                      Center(
+                        child: Text(
+                            "Something got wrong while fetching Assignments"),
+                      ),
+                    ],
+                  );
                 }
-
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Text("Loading");
+                  return Center(child: Text("Loading..."));
                 }
                 return Consumer<Database>(builder: (_, db, __) {
                   return Column(
@@ -140,14 +187,6 @@ class Today extends StatelessWidget {
                 });
               },
             ),
-            // if (!hasContent)
-            //   Center(
-            //       child: Column(
-            //     children: [
-            //       MySpaces.vSmallGapInBetween,
-            //       Text("Nothing to do today!"),
-            //     ],
-            //   )),
           ],
         ),
       );
